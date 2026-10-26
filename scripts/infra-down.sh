@@ -61,7 +61,7 @@ fi
 echo ""
 echo "▶ 2/5  Deleting LoadBalancer services (releases AWS ELBs)"
 if kube_available; then
-  for ns in sre-ai-agent sre-ai-agent-llm monitoring; do
+  for ns in sre-ai-agent sre-ai-agent-llm monitoring chaos; do
     LB_SVCS=$(kubectl get svc -n "$ns" \
       --field-selector spec.type=LoadBalancer \
       -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true)
@@ -70,7 +70,7 @@ if kube_available; then
       kubectl delete svc "$svc" -n "$ns" --wait=true --timeout=60s
     done
   done
-  # Wait for ELBs to fully deregister in AWS
+  # Wait for ELBs to fully deregister in AWS before VPC teardown
   echo "  Waiting 30s for ELBs to deregister..."
   sleep 30
   echo "  ✓ LoadBalancer services removed"
@@ -82,12 +82,24 @@ fi
 echo ""
 echo "▶ 3/5  Deleting PVCs (releases EBS volumes)"
 if kube_available; then
-  for ns in sre-ai-agent-llm monitoring; do
+  for ns in sre-ai-agent sre-ai-agent-llm monitoring chaos; do
+    # Delete regular PVCs
     kubectl delete pvc --all -n "$ns" --wait=true --timeout=120s \
       2>/dev/null || echo "  ℹ  No PVCs in $ns"
+
+    # StatefulSet volumeClaimTemplates create PVCs that survive
+    # namespace deletion. Delete them explicitly by label.
+    STS_PVCS=$(kubectl get pvc -n "$ns" \
+      -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true)
+    for pvc in $STS_PVCS; do
+      echo "  Force-deleting pvc/$pvc in ns/$ns..."
+      kubectl delete pvc "$pvc" -n "$ns" --wait=true --timeout=60s \
+        2>/dev/null || true
+    done
   done
-  # Give EBS time to detach
-  sleep 15
+  # Give EBS time to detach before cluster nodes are terminated
+  echo "  Waiting 20s for EBS volumes to detach..."
+  sleep 20
   echo "  ✓ PVCs removed"
 else
   echo "  ⚠  kubectl not connected — skipping PVC cleanup"
@@ -97,7 +109,7 @@ fi
 echo ""
 echo "▶ 4/5  Deleting application namespaces"
 if kube_available; then
-  for ns in sre-ai-agent sre-ai-agent-llm chaos; do
+  for ns in sre-ai-agent sre-ai-agent-llm monitoring chaos; do
     kubectl delete namespace "$ns" --wait=true --timeout=120s \
       2>/dev/null || echo "  ℹ  Namespace $ns already gone"
   done
@@ -118,5 +130,13 @@ echo "════════════════════════�
 echo "  ✅  All infrastructure destroyed."
 echo ""
 echo "  Note: ECR repos are deleted by Terraform only if empty."
-echo "  To force-delete images first, see docs/runbook-teardown.md"
+echo "  To force-delete images before re-destroy, run:"
+echo "    aws ecr batch-delete-image --region ap-south-1 \\"
+echo "      --repository-name sre-ai-agent-app \\"
+echo "      --image-ids \"\$(aws ecr list-images --region ap-south-1 \\"
+echo "        --repository-name sre-ai-agent-app --query 'imageIds' --output json)\""
+echo "    aws ecr batch-delete-image --region ap-south-1 \\"
+echo "      --repository-name sre-ai-agent-llm \\"
+echo "      --image-ids \"\$(aws ecr list-images --region ap-south-1 \\"
+echo "        --repository-name sre-ai-agent-llm --query 'imageIds' --output json)\""
 echo "═══════════════════════════════════════════════════════"
