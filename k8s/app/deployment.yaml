@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sre-demo-api
+  namespace: sre-ai-agent
+  labels:
+    app: sre-demo-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sre-demo-api
+  template:
+    metadata:
+      labels:
+        app: sre-demo-api
+      annotations:
+        # kube-prometheus-stack ServiceMonitor scrapes this
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8080"
+    spec:
+      nodeSelector:
+        workload: app
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: api
+          image: PLACEHOLDER_ECR_URL:latest  # replaced by deploy-app.sh
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SERVICE_ENV
+              value: "production"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          readinessProbe:
+            httpGet:
+              path: /api/ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

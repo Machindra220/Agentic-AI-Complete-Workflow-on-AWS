@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sre-demo-api
+  namespace: sre-ai-agent
+  annotations:
+    # AWS ALB Controller — creates an internet-facing Application Load Balancer
+    service.beta.kubernetes.io/aws-load-balancer-type: "external"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+spec:
+  type: LoadBalancer
+  selector:
+    app: sre-demo-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
