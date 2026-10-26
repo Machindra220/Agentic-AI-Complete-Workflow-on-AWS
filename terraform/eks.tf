@@ -8,7 +8,7 @@ module "eks" {
   version = "~> 20.8"
 
   cluster_name    = var.cluster_name
-  cluster_version = var.kubernetes_version
+  cluster_version = var.kubernetes_version  # 1.32 — latest EKS supported version
 
   # VPC — nodes in private subnets
   vpc_id                   = module.vpc.vpc_id
