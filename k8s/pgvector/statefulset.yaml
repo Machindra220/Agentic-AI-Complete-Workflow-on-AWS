@@ -14,6 +14,12 @@ spec:
       labels:
         app: pgvector
     spec:
+      # fsGroup: Kubernetes chowns the mounted EBS volume to this GID
+      # so the postgres user (uid/gid 999) can write to /var/lib/postgresql/data
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsNonRoot: true
       containers:
         - name: pgvector
           image: pgvector/pgvector:pg16
@@ -44,10 +50,7 @@ spec:
             limits:
               cpu: "500m"
               memory: "512Mi"
-          # Security: run as non-root postgres user
           securityContext:
-            runAsNonRoot: true
-            runAsUser: 999
             allowPrivilegeEscalation: false
           readinessProbe:
             exec:
