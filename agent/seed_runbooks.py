@@ -27,7 +27,7 @@ PG_DB         = os.getenv("PG_DB", "sre_agent")
 PG_USER       = os.getenv("PG_USER", "postgres")
 PG_PASSWORD   = os.environ["PG_PASSWORD"]  # required — set in .env
 EMBED_MODEL   = "amazon.titan-embed-text-v2:0"
-RUNBOOKS_DIR  = os.path.join(os.path.dirname(__file__), "runbooks")
+RUNBOOKS_DIR  = os.path.join(os.path.dirname(__file__), "..", "docs", "runbooks")
 CHUNK_SIZE    = 500  # characters per chunk
 
 

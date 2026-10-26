@@ -125,18 +125,17 @@ echo "  ✓ Extension and table ready"
 echo ""
 echo "▶ [6/6] Seeding SRE runbooks"
 if command -v python3 &>/dev/null; then
-  cd "$AGENT_DIR"
   pip3 install -q psycopg2-binary boto3 2>/dev/null || true
   kubectl port-forward -n "$NAMESPACE" svc/pgvector 5432:5432 &
   PF_PID=$!
   sleep 3
-  python3 seed_runbooks.py
+  python3 "${AGENT_DIR}/seed_runbooks.py"
   kill $PF_PID 2>/dev/null || true
   echo "  ✓ Runbooks seeded"
 else
   echo "  ⚠  python3 not found — skipping seed. Run manually:"
   echo "     kubectl port-forward -n $NAMESPACE svc/pgvector 5432:5432 &"
-  echo "     cd agent && python3 seed_runbooks.py"
+  echo "     python3 agent/seed_runbooks.py"
 fi
 
 # ── Verify ───────────────────────────────────────────────────
