@@ -100,7 +100,7 @@ variable "agent_node_max" {
 variable "bedrock_model_id" {
   description = "Bedrock foundation model ID used by the LangGraph agent"
   type        = string
-  default     = "anthropic.claude-3-5-haiku-20241022-v1:0"
+  default     = "anthropic.claude-3-5-sonnet-20241022-v2:0"
 }
 
 # ── CloudWatch ───────────────────────────────────────────────

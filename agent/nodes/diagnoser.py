@@ -1,7 +1,7 @@
 # =============================================================
 # agent/nodes/diagnoser.py
 # Node 3 — The AI reasoning step. Sends alert + runbook to
-# Bedrock Claude 3 Haiku and gets a root cause diagnosis back.
+# Bedrock Claude 3.5 Sonnet and gets a root cause diagnosis back.
 #
 # Input:  state["alert_parsed"], state["runbook_context"]
 # Output: state["diagnosis"], state["confidence_score"]
@@ -17,7 +17,7 @@ from agent.state import AgentState
 logger = logging.getLogger(__name__)
 
 AWS_REGION    = os.getenv("AWS_REGION", "ap-south-1")
-BEDROCK_MODEL = os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0")
+BEDROCK_MODEL = os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-5-sonnet-20241022-v2:0")
 
 LOW_CONFIDENCE_THRESHOLD = 0.60
 MAX_RETRIES = 2
@@ -70,7 +70,7 @@ Respond ONLY with valid JSON — no preamble, no markdown, no explanation outsid
 
 def diagnose(state: AgentState) -> AgentState:
     """
-    LangGraph Node 3 — LLM Diagnoser (Bedrock Claude 3 Haiku).
+    LangGraph Node 3 — LLM Diagnoser (Bedrock Claude 3.5 Sonnet).
 
     Reads:  state["alert_parsed"], state["runbook_context"], state["retry_count"]
     Writes: state["diagnosis"], state["confidence_score"]
