@@ -10,6 +10,12 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TERRAFORM_DIR="${SCRIPT_DIR}/../terraform"
 REGION="ap-south-1"
 
+# Load .env (strips Windows CRLF line endings)
+ENV_FILE="${SCRIPT_DIR}/../.env"
+if [[ -f "$ENV_FILE" ]]; then
+  set -a; source <(tr -d '\r' < "$ENV_FILE"); set +a
+fi
+
 echo "═══════════════════════════════════════════════════════"
 echo "  Phase 1 — Infrastructure Bootstrap"
 echo "═══════════════════════════════════════════════════════"

@@ -26,9 +26,17 @@ echo "  ✓ Cluster connected, namespace exists"
 # ── Create secret from env ───────────────────────────────────
 echo ""
 echo "▶ [2/5] Creating pgvector secret"
-: "${PG_PASSWORD:?Set PG_PASSWORD in .env}"
-: "${PG_USER:=postgres}"
-: "${PG_DB:=sre_agent}"
+# Source .env directly (strips CRLF — common on Windows)
+ENV_FILE="$(dirname "$0")/../.env"
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # tr -d '\r' strips Windows carriage returns before sourcing
+  source <(tr -d '\r' < "$ENV_FILE")
+  set +a
+fi
+: "${PG_PASSWORD:?PG_PASSWORD not set — add PG_PASSWORD=<value> to .env}"
+PG_USER="${PG_USER:-postgres}"
+PG_DB="${PG_DB:-sre_agent}"
 
 kubectl create secret generic pgvector-secret \
   --namespace "$NAMESPACE" \

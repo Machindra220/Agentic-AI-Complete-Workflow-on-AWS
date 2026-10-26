@@ -13,6 +13,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# Load .env (strips Windows CRLF line endings)
+ENV_FILE="${SCRIPT_DIR}/../.env"
+if [[ -f "$ENV_FILE" ]]; then
+  set -a; source <(tr -d '\r' < "$ENV_FILE"); set +a
+fi
+
 START_PHASE=1
 ONLY_PHASE=""
 
