@@ -124,18 +124,26 @@ echo "  ✓ Extension and table ready"
 # ── Seed runbooks ────────────────────────────────────────────
 echo ""
 echo "▶ [6/6] Seeding SRE runbooks"
-if command -v python3 &>/dev/null; then
-  pip3 install -q psycopg2-binary boto3 2>/dev/null || true
+# Detect python (Windows uses 'python', Linux/Mac uses 'python3')
+PYTHON=""
+for cmd in python3 python; do
+  if command -v "$cmd" &>/dev/null && "$cmd" -c "import sys; sys.exit(0 if sys.version_info.major==3 else 1)" 2>/dev/null; then
+    PYTHON="$cmd"; break
+  fi
+done
+
+if [[ -n "$PYTHON" ]]; then
+  "$PYTHON" -m pip install -q psycopg2-binary boto3 2>/dev/null || true
   kubectl port-forward -n "$NAMESPACE" svc/pgvector 5432:5432 &
   PF_PID=$!
   sleep 3
-  python3 "${AGENT_DIR}/seed_runbooks.py"
+  "$PYTHON" "${AGENT_DIR}/seed_runbooks.py"
   kill $PF_PID 2>/dev/null || true
   echo "  ✓ Runbooks seeded"
 else
-  echo "  ⚠  python3 not found — skipping seed. Run manually:"
+  echo "  ⚠  Python 3 not found — skipping seed. Run manually:"
   echo "     kubectl port-forward -n $NAMESPACE svc/pgvector 5432:5432 &"
-  echo "     python3 agent/seed_runbooks.py"
+  echo "     python agent/seed_runbooks.py"
 fi
 
 # ── Verify ───────────────────────────────────────────────────
