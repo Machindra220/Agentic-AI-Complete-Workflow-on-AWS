@@ -51,7 +51,7 @@ This project follows **least privilege, defence-in-depth** across every layer.
 
 - **Private networking** for worker nodes
 - API server endpoint: both public + private (restrict `publicAccessCIDRs` to your IP)
-- Kubernetes version: 1.29 (supported, regular updates)
+- Kubernetes version: 1.32 (supported, regular updates)
 - Managed node groups: automatic security patch rotation
 
 ---
@@ -95,7 +95,7 @@ This project follows **least privilege, defence-in-depth** across every layer.
 | ECR storage (<500MB) | $0 first year |
 | CloudWatch Logs (5GB) | $0 first 5GB/month |
 | ALB | ~$5 (use free credits) |
-| Bedrock (Claude 3 Haiku, light RCA calls) | ~$1–2 |
+| Bedrock (Claude 3.5 Sonnet, light RCA calls) | ~$2–4 |
 | Grafana Cloud | $0 (free tier) |
 
-> **Tip:** Run `eksctl delete cluster` when not actively developing — EKS + EC2 charges continue even when idle.
+> **Tip:** Run `bash scripts/infra-down.sh` when not actively developing — EKS + EC2 charges continue even when idle.

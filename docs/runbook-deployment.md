@@ -127,11 +127,11 @@ cd terraform
 terraform output
 ```
 
-**Copy and save these values** — you'll need them for later phases:
-- `ecr_app_url` — for `docker push` in Phase 22-C
-- `ecr_agent_url` — for `docker push` in Phase 22-D
-- `sre_agent_role_arn` — annotate the K8s service account in Phase 22-D
-- `promtail_role_arn` — annotate the K8s service account in Phase 24-B
+**Copy and save these values** — they are used automatically by deploy scripts:
+- `ecr_app_url` — used by `deploy-app.sh` for ECR push
+- `ecr_agent_url` — used by `deploy-agent.sh` for ECR push
+- `sre_agent_role_arn` — injected into `k8s/agent/serviceaccount.yaml` by `deploy-agent.sh`
+- `promtail_role_arn` — injected into `k8s/promtail/serviceaccount.yaml` by `deploy-promtail-cloudwatch.sh` (Phase 8)
 - `update_kubeconfig_command` — run this any time you switch machines
 
 ---
@@ -148,7 +148,8 @@ kubectl get pods -n sre-ai-agent-llm
 # pgvector-0   Running
 
 kubectl exec -n sre-ai-agent-llm pgvector-0 -- \
-  psql -U postgres -c "SELECT COUNT(*) FROM runbook_chunks;"
+  psql -U postgres -d sre_agent -c "SELECT COUNT(*) FROM runbook_chunks;"
+# Expected: count = 17
 ```
 
 ---
@@ -165,31 +166,50 @@ bash scripts/deploy-app.sh
 **Verify:**
 ```bash
 kubectl get pods -n sre-ai-agent
-# 3 pods Running
+# sre-demo-app-xxx   1/1 Running  (×2)
 
-APP_LB=$(kubectl get svc -n sre-ai-agent sre-ai-agent-svc \
+APP_LB=$(kubectl get svc sre-demo-api -n sre-ai-agent \
   -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-curl http://${APP_LB}/health
-# {"status": "ok"}
+curl http://${APP_LB}/api/health
+# {"status":"healthy","service":"sre-ai-agent-app","version":"1.0.0"}
 ```
 
 ---
 
 ## Phase 4 — LangGraph Agent (Bedrock)
 
+> **Before deploying:** ensure Bedrock model access is enabled in AWS Console →
+> Amazon Bedrock → Model access → ap-south-1:
+> - Claude 3.5 Sonnet (`anthropic.claude-3-5-sonnet-20241022-v2:0`) ✅
+> - Titan Embeddings V2 (`amazon.titan-embed-text-v2:0`) ✅
+
 ```bash
+# Sync latest IAM policy (Bedrock model ARNs)
+cd terraform && terraform apply -auto-approve && cd ..
+
 bash scripts/deploy-agent.sh
 ```
 
 **Verify:**
 ```bash
-AGENT_LB=$(kubectl get svc -n sre-ai-agent-llm sre-agent-svc \
-  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+kubectl get pods -n sre-ai-agent-llm
+# pgvector-0    1/1 Running
+# sre-agent-xxx 1/1 Running
 
-curl -X POST http://${AGENT_LB}/agent/triage \
+kubectl port-forward -n sre-ai-agent-llm svc/sre-agent 18081:8081 &
+
+curl http://localhost:18081/agent/health
+# {"status":"healthy","service":"sre-ai-agent","version":"1.0.0","rca_store_count":0}
+
+curl -s -X POST http://localhost:18081/agent/triage \
   -H "Content-Type: application/json" \
-  -d '{"alerts": [{"labels": {"alertname": "PodRestartRateHigh", "namespace": "sre-ai-agent"}}]}'
-# Returns JSON with "rca" field
+  -d '{
+    "alert_name": "High Error Rate",
+    "severity": "P2",
+    "service": "sre-demo-api",
+    "message": "5xx errors spiking in last 5 minutes"
+  }' | python -m json.tool
+# Expected: confidence_score > 0.6, runbook_used populated, status: completed
 ```
 
 ---
