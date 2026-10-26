@@ -13,7 +13,7 @@ agent_node_instance_type = "t3.small"
 agent_node_desired       = 1
 
 # Bedrock model
-bedrock_model_id = "anthropic.claude-3-haiku-20240307-v1:0"
+bedrock_model_id = "anthropic.claude-3-5-haiku-20241022-v1:0"
 
 # CloudWatch log retention (days)
 cloudwatch_retention_days = 14
