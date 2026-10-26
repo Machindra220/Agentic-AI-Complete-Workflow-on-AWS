@@ -26,9 +26,21 @@ echo "▶ [1/5] Pre-flight checks"
 for cmd in terraform aws kubectl helm; do
   command -v "$cmd" &>/dev/null || { echo "  ✗ $cmd not found"; exit 1; }
 done
-aws sts get-caller-identity --query Account --output text &>/dev/null || \
+ACTUAL_ACCOUNT=$(aws sts get-caller-identity --query Account --output text 2>/dev/null) || \
   { echo "  ✗ AWS CLI not authenticated — run: aws configure"; exit 1; }
-echo "  ✓ All tools ready (account: $(aws sts get-caller-identity --query Account --output text))"
+echo "  ✓ All tools ready (account: ${ACTUAL_ACCOUNT})"
+
+# Guard: .env AWS_ACCOUNT_ID must match the authenticated AWS account.
+# A mismatch causes ECR push failures and cross-account permission errors.
+if [[ -n "${AWS_ACCOUNT_ID:-}" && "${AWS_ACCOUNT_ID}" != "${ACTUAL_ACCOUNT}" ]]; then
+  echo ""
+  echo "  ✗ AWS_ACCOUNT_ID mismatch!"
+  echo "    .env says:    ${AWS_ACCOUNT_ID}"
+  echo "    aws sts says: ${ACTUAL_ACCOUNT}"
+  echo "  Fix: update AWS_ACCOUNT_ID in .env to ${ACTUAL_ACCOUNT}"
+  exit 1
+fi
+AWS_ACCOUNT_ID="${ACTUAL_ACCOUNT}"
 
 [ -f "${TERRAFORM_DIR}/terraform.tfvars" ] || \
   { echo "  ✗ terraform/terraform.tfvars not found. Copy from terraform.tfvars.template and fill in aws_account_id."; exit 1; }
@@ -67,6 +79,12 @@ helm upgrade --install aws-load-balancer-controller \
   --set "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn=${ALB_ROLE_ARN}" \
   --set enableCertManager=false \
   --wait --timeout 120s
+
+# Wait for ALB controller pods to be fully Ready before proceeding.
+# This ensures the IRSA token is loaded and IAM permissions are active,
+# preventing stale-token issues when LoadBalancer services are created.
+kubectl rollout status deployment/aws-load-balancer-controller \
+  -n kube-system --timeout=120s
 echo "  ✓ ALB Controller running:"
 kubectl get pods -n kube-system -l app.kubernetes.io/name=aws-load-balancer-controller
 
