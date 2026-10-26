@@ -372,8 +372,8 @@
 <div class="config-bar">
   <label>Agent URL:</label>
   <input type="text" id="agentUrl"
-    placeholder="http://<AGENT-LB>/agent/history"
-    value="http://a01f7c54eb1974898bc4039be2e27d5a-592454479.us-east-1.elb.amazonaws.com/agent/history">
+    placeholder="http://localhost:18081/agent/history"
+    value="">
   <button class="btn" onclick="loadIncidents()">Connect</button>
   <label style="margin-left:12px">Auto-refresh:</label>
   <select id="refreshInterval" onchange="setAutoRefresh()"
@@ -889,7 +889,15 @@ function downloadSingleHTML(idx) {
   triggerDownload(`${inc.incident_id}-rca-report.html`, html, 'text/html');
 }
 
-// ── Boot
+// ── Boot — auto-populate Agent URL from current page origin
+// When served via port-forward (localhost) or a real domain this
+// always points to the right place without manual entry.
+(function () {
+  const input = document.getElementById('agentUrl');
+  if (!input.value) {
+    input.value = window.location.origin + '/agent/history';
+  }
+})();
 loadIncidents();
 setAutoRefresh();
 </script>
