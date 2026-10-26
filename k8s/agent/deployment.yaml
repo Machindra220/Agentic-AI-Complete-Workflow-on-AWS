@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sre-agent
+  namespace: sre-ai-agent-llm
+  labels:
+    app: sre-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sre-agent
+  template:
+    metadata:
+      labels:
+        app: sre-agent
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8081"
+    spec:
+      serviceAccountName: sre-agent-sa
+      # Run on the dedicated ai-agent node group
+      nodeSelector:
+        workload: ai-agent
+      tolerations:
+        - key: "workload"
+          operator: "Equal"
+          value: "ai-agent"
+          effect: "NoSchedule"
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: agent
+          image: PLACEHOLDER_ECR_URL:latest   # replaced by deploy-agent.sh
+          ports:
+            - containerPort: 8081
+          env:
+            - name: AWS_REGION
+              value: "ap-south-1"
+            - name: BEDROCK_MODEL_ID
+              value: "anthropic.claude-3-haiku-20240307-v1:0"
+            # pgvector connection — in-cluster DNS
+            - name: PG_HOST
+              value: "pgvector.sre-ai-agent-llm.svc.cluster.local"
+            - name: PG_PORT
+              value: "5432"
+            - name: PG_DB
+              value: "sre_agent"
+            - name: PG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: pgvector-secret
+                  key: POSTGRES_USER
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgvector-secret
+                  key: POSTGRES_PASSWORD
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          readinessProbe:
+            httpGet:
+              path: /agent/ready
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /agent/health
+              port: 8081
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
