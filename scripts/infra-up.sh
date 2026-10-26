@@ -64,16 +64,41 @@ rm -f tfplan
 echo ""
 echo "▶ Updating kubeconfig"
 CLUSTER=$(terraform output -raw cluster_name)
-REGION=$(terraform output -raw aws_region 2>/dev/null || echo "ap-south-1")
+REGION="ap-south-1"
 aws eks update-kubeconfig --region "$REGION" --name "$CLUSTER"
 echo "  ✓ kubeconfig updated for cluster: $CLUSTER"
 
-# ── Verify ──────────────────────────────────────────────────
+# ── Verify nodes ─────────────────────────────────────────────
 echo ""
 echo "▶ Verifying nodes"
 kubectl wait --for=condition=Ready nodes --all --timeout=300s
 kubectl get nodes -o wide
 
+# ── ALB Controller (Helm) ────────────────────────────────────
+# Installed here (not in Terraform) to avoid Helm provider
+# repo-cache issues during terraform apply.
+echo ""
+echo "▶ Installing AWS Load Balancer Controller (Helm)"
+ALB_ROLE_ARN=$(terraform output -raw alb_controller_role_arn)
+
+helm repo add eks https://aws.github.io/eks-charts
+helm repo update
+
+helm upgrade --install aws-load-balancer-controller \
+  eks/aws-load-balancer-controller \
+  --namespace kube-system \
+  --version "1.7.2" \
+  --set clusterName="${CLUSTER}" \
+  --set serviceAccount.create=true \
+  --set serviceAccount.name=aws-load-balancer-controller \
+  --set "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn=${ALB_ROLE_ARN}" \
+  --set enableCertManager=false \
+  --wait --timeout 120s
+
+echo "  ✓ ALB Controller installed"
+kubectl get pods -n kube-system | grep aws-load-balancer
+
+# ── Print outputs ────────────────────────────────────────────
 echo ""
 echo "▶ Terraform outputs (save these for later phases)"
 terraform output
