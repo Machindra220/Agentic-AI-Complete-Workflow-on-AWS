@@ -22,7 +22,7 @@ import psycopg2
 # ── Config ────────────────────────────────────────────────────
 REGION        = os.getenv("AWS_REGION", "ap-south-1")
 PG_HOST       = os.getenv("PG_HOST", "localhost")
-PG_PORT       = int(os.getenv("PG_PORT", "5432"))
+PG_PORT       = int(os.getenv("PG_PORT", "15432"))
 PG_DB         = os.getenv("PG_DB", "sre_agent")
 PG_USER       = os.getenv("PG_USER", "postgres")
 PG_PASSWORD   = os.environ["PG_PASSWORD"]  # required — set in .env

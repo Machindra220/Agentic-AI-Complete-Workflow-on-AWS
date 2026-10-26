@@ -134,10 +134,11 @@ done
 
 if [[ -n "$PYTHON" ]]; then
   "$PYTHON" -m pip install -q psycopg2-binary boto3 2>/dev/null || true
-  kubectl port-forward -n "$NAMESPACE" svc/pgvector 5432:5432 &
+  kubectl port-forward -n "$NAMESPACE" svc/pgvector 15432:5432 &
   PF_PID=$!
   sleep 3
-  "$PYTHON" "${AGENT_DIR}/seed_runbooks.py"
+  PG_PORT=15432 PG_PASSWORD="${PG_PASSWORD}" PG_USER="${PG_USER}" PG_DB="${PG_DB}" \
+    "$PYTHON" "${AGENT_DIR}/seed_runbooks.py"
   kill $PF_PID 2>/dev/null || true
   echo "  ✓ Runbooks seeded"
 else
