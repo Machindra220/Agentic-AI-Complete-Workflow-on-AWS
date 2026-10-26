@@ -112,7 +112,7 @@ kubectl exec -n "$NAMESPACE" pgvector-0 -- psql -U postgres -d sre_agent -c "
     id         SERIAL PRIMARY KEY,
     title      TEXT NOT NULL,
     content    TEXT NOT NULL,
-    embedding  VECTOR(1536),
+    embedding  VECTOR(1024),
     created_at TIMESTAMPTZ DEFAULT NOW()
   );
   CREATE INDEX IF NOT EXISTS runbook_chunks_embedding_idx

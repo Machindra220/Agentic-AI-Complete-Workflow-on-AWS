@@ -37,7 +37,7 @@ def get_bedrock_client():
 
 def embed(client, text: str) -> list[float]:
     """Generate embedding vector via Bedrock Titan Embeddings v2."""
-    body = json.dumps({"inputText": text, "dimensions": 1536, "normalize": True})
+    body = json.dumps({"inputText": text, "dimensions": 1024, "normalize": True})
     response = client.invoke_model(
         modelId=EMBED_MODEL,
         contentType="application/json",
