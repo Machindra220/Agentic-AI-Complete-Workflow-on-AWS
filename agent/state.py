@@ -13,7 +13,7 @@ from typing import TypedDict, Optional
 class AlertInput(TypedDict):
     """
     Raw alert payload received from the API.
-    This is what Datadog (or a test caller) sends to /agent/triage.
+    This is what Alertmanager (or a test caller) sends to /agent/triage.
     """
     alert_name: str        # e.g. "High Error Rate"
     severity:   str        # e.g. "P1", "P2", "P3"

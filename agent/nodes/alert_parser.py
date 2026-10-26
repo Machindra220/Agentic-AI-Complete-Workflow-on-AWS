@@ -6,7 +6,7 @@
 # Output: state["alert_parsed"] + state["search_query"]
 #
 # Why this exists:
-#   Alerts from Datadog are messy. This node cleans them into
+#   Alerts from Alertmanager/Grafana can be messy. This node cleans them into
 #   a consistent structure all downstream nodes can rely on.
 # =============================================================
 
