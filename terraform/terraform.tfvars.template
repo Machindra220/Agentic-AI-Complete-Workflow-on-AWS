@@ -1,0 +1,19 @@
+# Copy this file to terraform.tfvars and fill in your values.
+# terraform.tfvars is gitignored — never commit it.
+
+aws_account_id = "<YOUR_12_DIGIT_ACCOUNT_ID>"
+aws_region     = "ap-south-1"
+cluster_name   = "sre-ai-agent-cluster"
+environment    = "dev"
+
+# Node sizes — t3.small is free-tier eligible
+app_node_instance_type   = "t3.small"
+app_node_desired         = 3
+agent_node_instance_type = "t3.small"
+agent_node_desired       = 1
+
+# Bedrock model
+bedrock_model_id = "anthropic.claude-3-haiku-20240307-v1:0"
+
+# CloudWatch log retention (days)
+cloudwatch_retention_days = 14
