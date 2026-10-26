@@ -8,9 +8,9 @@ This project follows **least privilege, defence-in-depth** across every layer.
 
 | Service Account | Namespace | IAM Policy | Scope |
 |---|---|---|---|
-| `aws-load-balancer-controller` | `kube-system` | `AWSLoadBalancerControllerIAMPolicy` | EC2 + ELB only |
-| `sre-agent-sa` | `sre-ai-agent-llm` | `SREAgentBedrockPolicy` | `bedrock:InvokeModel` on specific model ARNs only |
-| `promtail-sa` | `monitoring` | `SREPromtailCloudWatchPolicy` | `logs:PutLogEvents` on `/sre-ai-agent/*` only |
+| `aws-load-balancer-controller` | `kube-system` | `AWSLoadBalancerControllerIAMPolicy` | EC2 + ELB only — Phase 1 |
+| `sre-agent-sa` | `sre-ai-agent-llm` | `SREAgentBedrockPolicy` | `bedrock:InvokeModel` on specific model ARNs only — Phase 4 |
+| `promtail-sa` | `monitoring` | `SREPromtailCloudWatchPolicy` | `logs:PutLogEvents` on `/sre-ai-agent/*` only — Phase 8 |
 
 **IRSA** (IAM Roles for Service Accounts) means:
 - No static AWS keys anywhere in the cluster

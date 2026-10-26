@@ -41,15 +41,15 @@ Grafana Dashboard (chaos + RCA panels)
 
 | Phase | What | Script |
 |---|---|---|
-| 22-A | EKS cluster + VPC + ALB + namespaces + IAM | `scripts/infra-up.sh` |
-| 22-B | pgvector StatefulSet + EBS PVC + runbook seed | `scripts/deploy-pgvector.sh` |
-| 22-C | FastAPI app → ECR → EKS + HPA | `scripts/deploy-app.sh` |
-| 22-D | LangGraph agent → ECR → EKS | `scripts/deploy-agent.sh` |
-| 22-E | kube-prometheus-stack + ServiceMonitors + Rules | `scripts/deploy-monitoring.sh` |
-| 23 | Grafana Cloud remote_write + alerts + webhook | `scripts/configure-grafana-cloud.sh` |
-| 24-A | chaoskube pod killer | `scripts/deploy-chaoskube.sh` |
-| 24-B | Promtail DaemonSet → CloudWatch Logs | `scripts/deploy-promtail-cloudwatch.sh` |
-| 24-C | Import Grafana chaos dashboard | `docs/grafana-chaos-dashboard.json` |
+| **Phase 1** | EKS cluster + VPC + ALB + namespaces + IAM (Terraform) | `scripts/infra-up.sh` |
+| **Phase 2** | pgvector StatefulSet + EBS PVC + runbook seed | `scripts/deploy-pgvector.sh` |
+| **Phase 3** | FastAPI app → ECR → EKS + HPA | `scripts/deploy-app.sh` |
+| **Phase 4** | LangGraph agent → ECR → EKS (Bedrock) | `scripts/deploy-agent.sh` |
+| **Phase 5** | kube-prometheus-stack + ServiceMonitors + Alert Rules | `scripts/deploy-monitoring.sh` |
+| **Phase 6** | Grafana Cloud remote_write + alerts + webhook | `scripts/configure-grafana-cloud.sh` |
+| **Phase 7** | chaoskube pod killer | `scripts/deploy-chaoskube.sh` |
+| **Phase 8** | Promtail DaemonSet → CloudWatch Logs | `scripts/deploy-promtail-cloudwatch.sh` |
+| **Phase 9** | Import Grafana chaos dashboard | `docs/grafana-chaos-dashboard.json` |
 
 ## Quick Start
 

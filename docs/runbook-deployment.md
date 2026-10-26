@@ -64,7 +64,7 @@ aws sts get-caller-identity
 
 ---
 
-## Phase 22-A — Infrastructure Bootstrap (Terraform)
+## Phase 1 — Infrastructure Bootstrap (Terraform)
 
 **Time:** ~20 minutes (EKS cluster takes ~15 min to create)
 
@@ -136,7 +136,7 @@ terraform output
 
 ---
 
-## Phase 22-B — pgvector + Runbook Seeding
+## Phase 2 — pgvector + Runbook Seeding
 
 ```bash
 bash scripts/deploy-pgvector.sh
@@ -153,7 +153,7 @@ kubectl exec -n sre-ai-agent-llm pgvector-0 -- \
 
 ---
 
-## Phase 22-C — FastAPI App
+## Phase 3 — FastAPI App
 
 ```bash
 # Get ECR URL from terraform output
@@ -175,7 +175,7 @@ curl http://${APP_LB}/health
 
 ---
 
-## Phase 22-D — LangGraph Agent (Bedrock)
+## Phase 4 — LangGraph Agent (Bedrock)
 
 ```bash
 bash scripts/deploy-agent.sh
@@ -194,7 +194,7 @@ curl -X POST http://${AGENT_LB}/agent/triage \
 
 ---
 
-## Phase 22-E — Prometheus + Grafana
+## Phase 5 — Prometheus + Grafana
 
 ```bash
 bash scripts/deploy-monitoring.sh
@@ -209,7 +209,7 @@ kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80
 
 ---
 
-## Phase 23 — Grafana Cloud (remote_write + alerts)
+## Phase 6 — Grafana Cloud (remote_write + alerts)
 
 ```bash
 # Set your Grafana Cloud values in .env first, then:
@@ -218,7 +218,7 @@ bash scripts/configure-grafana-cloud.sh
 
 ---
 
-## Phase 24-A — chaoskube
+## Phase 7 — chaoskube
 
 ```bash
 bash scripts/deploy-chaoskube.sh
@@ -232,7 +232,7 @@ kubectl logs -n chaos deployment/chaoskube --tail=20
 
 ---
 
-## Phase 24-B — Promtail → CloudWatch
+## Phase 8 — Promtail → CloudWatch
 
 ```bash
 bash scripts/deploy-promtail-cloudwatch.sh
@@ -247,7 +247,7 @@ aws logs describe-log-groups \
 
 ---
 
-## Phase 24-C — Import Chaos Dashboard
+## Phase 9 — Import Chaos Dashboard
 
 1. Open your Grafana Cloud dashboard
 2. Go to **Dashboards → Import**

@@ -13,7 +13,7 @@ set -euo pipefail
 TERRAFORM_DIR="$(dirname "$0")/../terraform"
 
 echo "═══════════════════════════════════════════════════════"
-echo "  SRE-AI-Agent  ·  Phase 22-A  ·  Infrastructure Up"
+echo "  SRE-AI-Agent  ·  Phase 1  ·  Infrastructure Up (Terraform)"
 echo "═══════════════════════════════════════════════════════"
 
 # ── Pre-flight ───────────────────────────────────────────────
@@ -80,6 +80,6 @@ terraform output
 
 echo ""
 echo "═══════════════════════════════════════════════════════"
-echo "  ✅  Phase 22-A complete"
-echo "  Next: bash scripts/deploy-pgvector.sh"
+echo "  ✅  Phase 1 complete — Infrastructure is live"
+echo "  Next: bash scripts/deploy-pgvector.sh  (Phase 2)"
 echo "═══════════════════════════════════════════════════════"
