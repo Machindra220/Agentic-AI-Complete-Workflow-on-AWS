@@ -11,6 +11,7 @@ resource "aws_ecr_repository" "repos" {
 
   name                 = each.key
   image_tag_mutability = "MUTABLE"
+  force_delete         = true   # allows destroy even when images exist
 
   # Security: scan every image pushed for CVEs
   image_scanning_configuration {
