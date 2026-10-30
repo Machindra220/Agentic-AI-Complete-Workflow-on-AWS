@@ -146,6 +146,7 @@ Destroys in safe order: Helm releases → NLB services → PVCs (EBS) → Namesp
 
 | Doc | Purpose |
 |---|---|
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | All errors encountered, root causes, fixes + useful commands |
 | [docs/REDEPLOY-PHASE1-TO-4.md](docs/REDEPLOY-PHASE1-TO-4.md) | Full redeploy guide from zero |
 | [docs/architecture-security.md](docs/architecture-security.md) | Security design, IRSA, network policy |
 | [docs/runbook-deployment.md](docs/runbook-deployment.md) | Phase-by-phase deployment runbook |
