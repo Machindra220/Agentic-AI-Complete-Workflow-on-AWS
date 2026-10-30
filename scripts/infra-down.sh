@@ -67,7 +67,10 @@ if kube_available; then
       -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true)
     for svc in $LB_SVCS; do
       echo "  Deleting svc/$svc in ns/$ns..."
-      kubectl delete svc "$svc" -n "$ns" --wait=true --timeout=60s
+      # --wait=false + force avoids timeout exit on slow ELB deregistration.
+      # The sleep 30 below gives AWS time to fully release the ELB.
+      kubectl delete svc "$svc" -n "$ns" --wait=false --grace-period=0 --force \
+        2>/dev/null || true
     done
   done
   # Wait for ELBs to fully deregister in AWS before VPC teardown
