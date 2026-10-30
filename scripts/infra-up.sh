@@ -64,7 +64,7 @@ kubectl get nodes
 
 # ── ALB Controller ───────────────────────────────────────────
 echo ""
-echo "▶ [4/5] Install ALB Controller"
+echo "▶ [4/6] Install ALB Controller"
 ALB_ROLE_ARN=$(terraform output -raw alb_controller_role_arn)
 helm repo add eks https://aws.github.io/eks-charts 2>/dev/null || true
 helm repo update
@@ -90,7 +90,22 @@ kubectl get pods -n kube-system -l app.kubernetes.io/name=aws-load-balancer-cont
 
 # ── Summary ──────────────────────────────────────────────────
 echo ""
-echo "▶ [5/5] Outputs"
+echo "▶ [5/6] Create application namespaces"
+for ns in sre-ai-agent sre-ai-agent-llm monitoring chaos; do
+  if kubectl get namespace "$ns" &>/dev/null; then
+    echo "  ℹ  Namespace $ns already exists"
+  else
+    kubectl create namespace "$ns"
+    kubectl label namespace "$ns" \
+      app.kubernetes.io/managed-by=terraform \
+      project=sre-ai-agent
+    echo "  ✓  Namespace $ns created"
+  fi
+done
+
+# ── Summary ──────────────────────────────────────────────────
+echo ""
+echo "▶ [6/6] Outputs"
 terraform output
 
 echo ""
