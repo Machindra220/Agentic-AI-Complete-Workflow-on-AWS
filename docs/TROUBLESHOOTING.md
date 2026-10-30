@@ -354,6 +354,75 @@ cd terraform && terraform destroy -auto-approve
 
 ---
 
+### 14. `terraform destroy` — DependencyViolation on subnets / IGW / security group
+
+**Error:**
+```
+Error: deleting EC2 Subnet: DependencyViolation: The subnet has dependencies and cannot be deleted.
+Error: deleting EC2 Internet Gateway: Network vpc-xxx has some mapped public address(es).
+Error: deleting Security Group: resource sg-xxx has a dependent object
+Error: ECR Repository not empty — RepositoryNotEmptyException
+```
+
+**Cause:** Leftover NLB, ENIs, and security groups from the LoadBalancer service are still attached to the VPC. ECR repos still have images pushed to them.
+
+**Fix — run in a second terminal while terraform terminal is open:**
+
+```bash
+# 1. Find and delete leftover NLBs
+aws elbv2 describe-load-balancers --region ap-south-1 \
+  --query 'LoadBalancers[*].[LoadBalancerArn,State.Code]' --output table
+
+aws elbv2 delete-load-balancer --region ap-south-1 \
+  --load-balancer-arn <arn-from-above>
+
+# 2. Find ENIs attached to the stuck security group
+aws ec2 describe-network-interfaces --region ap-south-1 \
+  --filters "Name=group-id,Values=<sg-id>" \
+  --query 'NetworkInterfaces[*].[NetworkInterfaceId,Status,Description]' \
+  --output table
+
+# Delete each ENI
+aws ec2 delete-network-interface --region ap-south-1 \
+  --network-interface-id <eni-id>
+
+# 3. Delete the security group (after ENIs are gone)
+aws ec2 delete-security-group --region ap-south-1 --group-id <sg-id>
+
+# 4. Force-delete ECR repos with images
+aws ecr delete-repository --region ap-south-1 \
+  --repository-name sre-ai-agent-app --force
+aws ecr delete-repository --region ap-south-1 \
+  --repository-name sre-ai-agent-llm --force
+```
+
+Then re-run `terraform destroy -auto-approve`.
+
+**Prevention:**
+- `ecr.tf` now has `force_delete = true` — ECR repos delete even when images exist
+- Always use `bash scripts/infra-down.sh` instead of raw `terraform destroy` — it deletes Helm releases and LoadBalancer services first in the correct order
+
+---
+
+### 15. `kubectl delete svc` stuck for 30+ minutes
+
+**Symptom:** `kubectl delete svc sre-demo-api -n sre-ai-agent --wait=true` hangs indefinitely with no output.
+
+**Cause:** The service has a finalizer waiting for the AWS NLB to fully deregister, which can take a long time or stall if the NLB is in a broken state.
+
+**Fix:**
+```bash
+# In a new terminal — remove the finalizer to unblock deletion
+kubectl patch svc sre-demo-api -n sre-ai-agent \
+  -p '{"metadata":{"finalizers":[]}}' --type=merge
+
+# Then Ctrl+C the stuck terminal and continue teardown manually
+```
+
+**Prevention:** `infra-down.sh` now uses `--wait=false --force` on service deletion so it never blocks the script.
+
+---
+
 ## Bedrock Model Reference (ap-south-1)
 
 | Model | ID | Available in ap-south-1 |
